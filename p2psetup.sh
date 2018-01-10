@@ -25,20 +25,24 @@ sudo apt-get -y install autoconf >>$now-p2pool.log
 #Multiplexer
 sudo apt-get -y install tmux >>$now-p2pool.log
 
+#dyndns updater
+sudo apt-get -y install libio-socket-ssl-perl >>$now-p2pool.log
+sudo apt-get -y install ddclient >>$now-p2pool.log
+
 #Firewall
-sudo ufw allow ssh/tcp
-#sudo ufw limit ssh/tcp
-sudo ufw allow 7903
-sudo ufw allow 9998/tcp
-sudo ufw allow 9999/tcp
-sudo ufw logging on
+sudo ufw allow ssh/tcp >>$now-p2pool.log
+#sudo ufw limit ssh/tcp >>$now-p2pool.log
+sudo ufw allow 7903 >>$now-p2pool.log
+sudo ufw allow 9998/tcp >>$now-p2pool.log
+sudo ufw allow 9999/tcp >>$now-p2pool.log
+sudo ufw logging on >>$now-p2pool.log
 
 #Swapfile
-sudo fallocate -l 4G /swapfile
-sudo chmod 600 /swapfile
-sudo mkswap /swapfile
-sudo swapon /swapfile
-sudo sed -i '$ a\/swapfile none swap sw 0 0' /etc/fstab
+sudo fallocate -l 4G /swapfile >>$now-p2pool.log
+sudo chmod 600 /swapfile >>$now-p2pool.log
+sudo mkswap /swapfile >>$now-p2pool.log
+sudo swapon /swapfile >>$now-p2pool.log
+sudo sed -i '$ a\/swapfile none swap sw 0 0' /etc/fstab  >>$now-p2pool.log
 
 #For cgminer
 #sudo apt-get -y install libudev-dev >>$now-p2pool.log
@@ -110,6 +114,9 @@ cd ..
 git clone https://github.com/darkcoinproject/xcoin-hash.git
 cd xcoin-hash
 python setup.py install
+cd ~
+git clone https://github.com/radawson/dashman
+sudo ~/dashman/dashman install
 
 #Build darkcoin subsidy
 #sudo python ~/p2pool-drk/darkcoin-subsidy-python/setup.py install
