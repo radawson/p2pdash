@@ -117,6 +117,9 @@ python setup.py install
 cd ~
 git clone https://github.com/radawson/dashman
 sudo ~/dashman/dashman install
+if [ -d "$HOME/dashman" ]; then
+   PATH="$PATH:$HOME/dashman"
+fi
 
 #Build darkcoin subsidy
 #sudo python ~/p2pool-drk/darkcoin-subsidy-python/setup.py install
