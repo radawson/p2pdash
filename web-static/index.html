@@ -1,566 +1,237 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <!-- This script was written by Alexander Zschach <alex . zschach.net>
-         https://github.com/johndoe75/p2pool-node-status
-         Bugfixes, additional miner info display and other improvements
-         by Claus Herwig <c.herwig . checon.de> for VTC p2pool
-         https://github.com/donSchoe/p2pool-vtc
-    -->
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <meta name="robots" content="noimageindex">
-    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="shortcut icon" href="favicon.ico">
+
+        <title>p2pool - node stats</title>
+
+        <!-- Bootstrap core CSS -->
+        <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css">
+        <link rel="stylesheet" href="css/bootstrap-sortable.css">
+        <link id="theme" rel="stylesheet" href="#">
+
+        <script src="js/config.json"></script>
+
+        <!-- Custom styles for this template -->
+        <link href="css/p2pool.css" rel="stylesheet">
+    </head>
+    <body>
+        <header class="navbar navbar-inverse navbar-fixed-top" role="banner">
+            <div class="container">
+                <div class="navbar-header">
+                    <button class="navbar-toggle" type="button" data-toggle="collapse" data-target=".navbar-collapse">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="#">p2pool <span id="currency"></span></a>
+                </div>
+                
+                <nav class="navbar-collapse collapse" role="navigation">
+                    <div class="navbar-right btn-group">
+                        <div class="btn-group">
+                            <button type="button" class="btn navbar-btn btn-info btn-sm hidden-sm hidden-xs" data-toggle="modal" data-target="#hashgraph">Hashrate Graph <span class="caret"></span></button>
+                        </div>
+                        <button type="button" class="btn navbar-btn btn-default btn-sm">Last Block Found: <span id="last_block"></span></button>
+                        <button type="button" class="btn navbar-btn btn-default btn-sm">Last Updated: <span id="updated"></span></button>
+                        <div class="btn-group">
+                            <button type="button" class="btn navbar-btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown"><span class="fa fa-cog"></span></button>
+                            <ul class="dropdown-menu" role="menu">
+                                <li data-toggle="modal" data-target="#setminers"><a href="#">Set My Miners</a></li>
+                                <li data-toggle="modal" data-target="#settheme"><a href="#">Change Theme</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </nav>
+            </div>
+        </header>
+
+        <div class="container">
+            <div id="node_alerts" class="alert alert-danger hidden"></div>
+            <div class="alert alert-info hidden">2013-12-13: This is a message to miners on my node telling them something really cool.</div>
+            <div id="header_content"></div>
+      
+            <section class="panel panel-default">
+                <div class="panel-heading">
+                    <h4>Active Miners On This Node</h4>
+                </div>
+                <div class="table-responsive">
+                    <table id="active_miners" class="table table-hover sortable">
+                        <thead>
+                            <tr>
+                                <th class="text-left">Address</th>
+                                <th class="text-right">Hashrate</th>
+                                <th class="text-right">Rejected Hashrate</th>
+                                <th class="text-right">Predicted Payout</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </section>
+            
+            <section class="panel panel-default clearfix">
+                <div class="panel-heading">
+                    <h4>Status</h4>
+                </div>
+                <ul class="list-group status rate_info pull-left">
+                    <li class="list-group-item">Global Pool Hashrate: <span id="global_rate"></span></li>
+                    <li class="list-group-item">Local Pool Hashrate: <span id="local_rate"></span></li>
+                    <li class="list-group-item">Current Block Value: <span id="block_value"></span></li>
+                </ul>
+                <ul class="list-group status share_info pull-right">
+                    <li class="list-group-item">Local Shares: <span id="shares"></span></li>
+                    <li class="list-group-item">Share Difficulty: <span id="share_difficulty"></span></li>
+                    <li class="list-group-item">Expected Time to Share: <span id="expected_time_to_share"></span></li>
+                    <li class="list-group-item">Expected Time to Block: <span id="expected_time_to_block"></span></li>
+                </ul>
+            </section>
+            
+            <section class="panel panel-default clearfix">
+                <div class="panel-heading">
+                    <h4>Node Information</h4>
+                </div>
+                <ul class="list-group status pull-left">
+                    <li class="list-group-item">
+                        Node Peers:
+                        <span>
+                            <i class="fa fa-sign-in fa-fw" title="Inbound"></i>
+                            <span id="peers_in"></span>
+                            /
+                            <i class="fa fa-sign-out fa-fw" title="Outbound"></i>
+                            <span id="peers_out"></span>
+                        </span>
+                    </li>
+                    <li class="list-group-item">Node p2pool Version: <span id="p2pool_version"></span></li>
+                    <li class="list-group-item">Node Fee: <span id="node_fee"></span></li>
+                </ul>
+                <ul class="list-group status pull-right">
+                    <li class="list-group-item">Node Uptime: <span id="node_uptime"></span></li>
+                    <li class="list-group-item">Protocol Version: <span id="protocol_version"></span></li>
+                    <li class="list-group-item">Node Donation: <span id="node_donation"></span></li>
+                </ul>
+            </section>
+      
+            <section class="panel panel-default">
+                <div class="panel-heading">
+                    <h4>Recent Blocks</h4>
+                </div>
+                <div class="recent_blocks table-responsive">
+                    <table id="recent_blocks" class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>When</th>
+                                <th>Date/Time</th>
+                                <th>Number</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </section>
+
+            <section id="hashgraph" class="modal fade" role="dialog" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                            <h4 class="modal-title">Local Hashrate Graph</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div id="chart-buttons">
+                                <button id="hour" type="button" class="hashrate btn btn-info">Hour</button>
+                                <button id="day" type="button" class="hashrate btn btn-info">Day</button>
+                                <button id="week" type="button" class="hashrate btn btn-info">Week</button>
+                                <button id="month" type="button" class="hashrate btn btn-info">Month</button>
+                                <button id="year" type="button" class="hashrate btn btn-info">Year</button>
+                            </div>
+                            <div id="chart"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="setminers" class="modal fade" role="dialog" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                            <h4 class="modal-title">Set My Miners</h4>
+                        </div>
+                        <div class="modal-body clearfix">
+                            <p>Add a list of your miners to highlight on the stats page.</p>
+                            <p>One address per line:</p>
+                            <textarea id="myminers"></textarea>
+                            <input id="onlymyminers" name="onlymyminers" type="checkbox" value="0" />
+                            <label for="onlymyminers">Display only my miners</label>
+                            <button id="setminers" type="button" class="btn btn-primary pull-right" data-dismiss="modal">Set Miners</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="settheme" class="modal fade" role="dialog" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden"true">&times;</button>
+                            <h4 class="modal-title">Set Theme</h4>
+                        </div>
+                        <div class="modal-body clearfix">
+                            <p>Choose a Theme:</p>
+                            <ul class="nav nav-pills nav-stacked">
+                                <li class="active"><a href="#">Default</a></li>
+                                <li><a href="#">Amelia</a></li>
+                                <li><a href="#">Cerulean</a></li>
+                                <li><a href="#">Cosmo</a></li>
+                                <li><a href="#">Cyborg</a></li>
+                                <li><a href="#">Darkly</a></li>
+                                <li><a href="#">Flatly</a></li>
+                                <li><a href="#">Journal</a></li>
+                                <li><a href="#">Lumen</a></li>
+                                <li><a href="#">Readable</a></li>
+                                <li><a href="#">Simplex</a></li>
+                                <li><a href="#">Slate</a></li>
+                                <li><a href="#">Spacelab</a></li>
+                                <li><a href="#">Superhero</a></li>
+                                <li><a href="#">United</a></li>
+                                <li><a href="#">Yeti</a></li>
+                            </ul>
+                            <p class="pull-right">Themes from <a href="http://bootswatch.com/">Bootswatch.com</a></p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
         
-    <title>DASH Kicks Ass p2pool</title>
-
-    <link href="http://fonts.googleapis.com/css?family=Roboto:300,300italic,400,400italic,100,100italic,500,500italic,700,700italic,900,900italic" rel="stylesheet" type="text/css">
-    <link href='http://fonts.googleapis.com/css?family=Roboto+Condensed:400italic,700italic,400,700' rel='stylesheet' type='text/css'>
-
-    <!-- Bootstrap core CSS -->
-    <link rel="stylesheet" href="css/bootstrap.min.css">
-    <link rel="stylesheet" href="css/bootstrap-theme.min.css">
-    <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
-
-    <script src="js/jquery-2.0.3.min.js"></script>
-    <script src="js/bootstrap.min.js"></script>
-    <script src="js/jquery-dateFormat.min.js"></script>
-
-    <script src="js/highcharts.js"></script>
-    <script src="js/exporting.js"></script>
-
-    <script src="js/util.js"></script>
-    <script src="js/graph.js"></script>
-    
-    <script src="js/market.js"></script>
-
-    <!-- Custom styles for this template -->
-    <link href="css/grid.css" rel="stylesheet">
-
-    <style type="text/css">
-      body {
-	font-family: 'Roboto', Helvetica, sans-serif;
-	font-size: 14px;
-	background-image: url(/static/img/33692-Extra-Large_Colorful_Backgrounds_Vol_3_No_16.jpg);
-	background-repeat: repeat-y;
-      }
-    body,td,th {
-	font-family: Roboto, Helvetica, sans-serif;
-	color: #03F;
-}
-    a:hover {
-	color: #0066FF;
-}
-    a:visited {
-	color: #999;
-}
-    a:active {
-	color: #CC9;
-}
-    </style>
-
-  </head>
-
-  <body>
-    <!--<div id='ribbon'>
-      <a href="https://github.com/johndoe75/p2pool-node-status">
-        <img style="position: absolute; top: 0; right: 0; border: 0;" src="img/forkme_right_orange_ff7600.png" alt="Fork me on GitHub">
-      </a>
-    </div>-->
-
-    <div class="container">
-      <div class="page-header">
-        <h1><a href=http://darkcoin.io><img src="/static/img/DarkcoinKicksAss.png" width="971" height="118" alt="DASH Kicks Ass"></a></h1>
-        <h1><a href=http://darkcoin.io><img src="/static/img/darkcoinnew.png" width="140" height="140" alt="DASH" longdesc="http://darkcoin.io"></a>p2pool (<span class='currency'></span>) &dash; node information</h1>
-        <p><a href=http://www.darkcoin.io/mining.html>[DASH miner]</a> -
-      <a href=http://drk.poolhash.org/graph.html>[diff chart]</a> -
-      <a href=http://drk.poolhash.org/scanner.html>[p2pool nodes]</a> - <a href=http://drk.poolhash.org/poolhash.html>[p2pool hash rate]</a> -
-      <a href=https://bitbucket.org/dstorm/p2pool-drk>[p2pool src]</a>
-      <b>
-      <small>
-        Node: <span class='node'></span>&nbsp;&dash;
-            Updated: <span id='updated'></span>
-      </small>
-      </b>
-      </p>
-        <p>Donations:<a href=http://explorer.darkcoin.io/address/XepkHLT2MYTXSFDc2muiGeA9eRzG6ytpSy> XepkHLT2MYTXSFDc2muiGeA9eRzG6ytpSy</a></p>
-      </div>
-      <div id='node_alerts' class="alert alert-danger hidden"></div>
-
-<div class="alert alert-info">
-<p><b>Miner Configuration:</b></p>
-<p>sgminer --kernel darkcoin -o stratum+tcp://darkcoin.kicks-ass.net:7903 -u [wallet address] -p x -I 18</p>
-<p>minerd -a X11 -o stratum+tcp://darkcoin.kicks-ass.net:7903 -u [wallet address] -p x</p>
-</div>
-      <!-- We should have a possiblity showing other miners on our node what
-           happened or if we have other things to tell them. -->
-<!-- <div class="alert alert-info">
-       <em>3/24 - Still working on the website design</em>
-</div> -->
-<div class="alert alert-danger">
-<p><center>
-  <p>September 22, 2014 - Darkcoin updated to 10.13.15 (RC5)<br>Make sure your clients are updated!<br></p>
-  <p>Links to updated clients:<br>
-    <a href=http://www.darkcoin.io/getstarted.html>http://www.darkcoin.io/getstarted.html</a><br></p>
-</center>
-</div>
-      <center>
-<div class='container'>
-          <button id='hour' type="button" class="hashrate btn btn-info">Hour</button>
-          <button id='day' type="button" class="hashrate btn btn-info">Day</button>
-          <button id='week' type="button" class="hashrate btn btn-info">Week</button>
-          <button id='month' type="button" class="hashrate btn btn-info">Month</button>
-          <button id='year' type="button" class="hashrate btn btn-info">Year</button>
-</div>
-      </center>
-      <div id='graph'></div>
-      
-      <h4>Status</h4>
-      <table id='status' class="table table-hover" border='0'>
-        <tr>
-          <td width='25%'>Local rate:</td>
-          <td width='25%' class='text-right'><span id='local_rate'></span></td>
-          <td width='25%'>Shares:</td>
-          <td width='25%' class='text-right'><span id='shares'></span></td>
-        </tr>
-        <tr>
-          <td width='25%'>Global pool rate:</td>
-          <td width='25%' class='text-right'><span id='global_rate'></span></td>
-          <td width='25%'>Share difficulty (pool minimum):</td>
-          <td width='25%' class='text-right'><span id='share_difficulty'></span></td>
-        </tr>
-        <tr>
-          <td width='25%'><span class='currency'></span> network hashrate (estimate):</td>
-          <td width='25%' class='text-right'><span id='network_rate'></span></td>
-          <td width='25%'>Network block difficulty:</td>
-          <td width='25%' class='text-right'><span id='block_difficulty'></span></td>
-        </tr>
-        <tr>
-          <td width='25%'>Current block value:</td>
-          <td width='25%' class='text-right'><span id='block_value'></span></td>
-          <td width='25%'>Expected time to share (this node):</td>
-          <td width='25%' class='text-right'><span id='expected_time_to_share'></span></td>
-        </tr>
-        <tr>
-        <!--  <td width='25%'>Payout if a block were found NOW:</td>
-          <td width='25%' class='text-right'><span id='payout_now'></span></td>-->
-          <td width='25%'>Node peers:</td>
-          <td width='25%' class='text-right'>
-            <i class='fa fa-sign-in fa-fw'></i>
-            <span id='peers_in'></span><i class='fa fa-sign-out fa-fw'></i>
-            <span id='peers_out'></span>
-          </td>
-          <td width='25%'>Expected time to block (pool):</td>
-          <td width='25%' class='text-right'><span id='expected_time_to_block'></span></td>
-        </tr>
-        <tr>
-          <td width='25%'>Node fee:</td>
-          <td width='25%' class='text-right'><span id='node_fee'></span></td>
-          <td width='25%'>Node uptime:</td>
-          <td width='25%' class='text-right'><span id='node_uptime'></span></td>
-        </tr>
-        <tr>
-          <td width='25%'>Exchange Rate:</td>
-          <td width='25%' class='text-right'><b id="market"></b></td>
-         <td width='25%'></td>
-         <td width='25%' class='text-right'></td>
-        </tr>
-        <tr>
-          <td width='25%'>Node p2pool version:</td>
-          <td width='25%' class='text-right'><span id='p2pool_version'></span></td>
-          <td width='25%'>Protocol version:</td>
-          <td width='25%' class='text-right'><span id='protocol_version'></span></td>
-        </tr>
-        </table>
-
-      <h4>Active miners on this node</h4>
-      <table class="table table-hover">
-        <thead><tr>
-          <th class='text-left'><span class='currency'></span> Address</th>
-          <th class='text-right'>Hashrate</th>
-          <th class='text-right'>DOA Hashrate (DOA %)</th>
-          <th class='text-right'>Share difficulty</th>
-          <th class='text-right'>Time to share</th>
-          <th class='text-right'>Predicted payout</th>
-        </tr></thead>
-        <tbody id='active_miners'>
-        </tbody>
-      </table>
-
-      <h3 align="center"><a href="classic">Click here for more detailed stats
-      and graphs (classic p2pool)</a></h3>
-
-      <h4>Recent blocks</h4>
-      <table class="table table-hover">
-        <thead><tr>
-          <th>When</th>
-          <th>Date/Time</th>
-          <th>Number</th>
-          <th>Hash</th>
-          <!--<th>Confirmations</th>-->
-        </tr></thead>
-        <tbody id='recent_blocks'>
-        </tbody>
-      </table>
-
-    </div> <!-- /container -->
-    <script type="text/javascript">
-
-    $(document).ready(function() {
-      $(document).trigger('init');
-    });
-
-    // reload timers 
-    var intervalFigures = 30;
-    var intervalGraph = 600;
-    
-    // array defining my addresses for highlighting them
-    var myself= [ ];
-
-    var currency, currency_info, rate, local_stats,
-        global_stats, current_payouts, recent_blocks;
-    var local_hashrate= 0, local_doa_hashrate= 0;
-
-    // ==================================================================
-    // event handlers
-
-    $('#hour.hashrate').click(function(e) {
-      fetchGraph('hour');
-    });
-    $('#day.hashrate').click(function(e) {
-      fetchGraph('day');
-    });
-    $('#week.hashrate').click(function(e) {
-      fetchGraph('week');
-    });
-    $('#month.hashrate').click(function(e) {
-      fetchGraph('month');
-    });
-    $('#year.hashrate').click(function(e) {
-      fetchGraph('year');
-    });
-
-    // ==================================================================
-    // custom event handlers
-
-    // init
-
-    $(document).on('init', function(e, eventInfo) {
-      fetchPrice(155,"DSH"); fetchdata(); fetchBlocks(); fetchGraph('day');
-    });
-
-    $(document).on('update', function(e, eventInfo) {
-      fetchPrice(155,"DSH");
-      fetchdata();
-      d=new Date()
-      if (((d.getMinutes() * 60 + d.getSeconds()) % intervalGraph) < intervalFigures) {
-	fetchBlocks();
-        graphPeriod=char.title.text.match(/\((.+)\)/)[1] || 'day';
-        fetchGraph(graphPeriod);
-      };
-    });
-
-    $(document).on('init', function(e, eventInfo) {
-      fetchdata(); fetchBlocks(); fetchGraph('day');
-    });
-
-    $(document).on('update', function(e, eventInfo) {
-      fetchdata();
-      d=new Date()
-      if (((d.getMinutes() * 60 + d.getSeconds()) % intervalGraph) < intervalFigures) {
-        fetchBlocks();
-        graphPeriod=char.title.text.match(/\((.+)\)/)[1] || 'day';
-        fetchGraph(graphPeriod);
-      };
-    });
-
-    $(document).on('update_time', function(e, eventInfo) {
-      remain_block = 45000 - blno.block_no ;
-      remain_time = ( remain_block * 150 / 60 / 60 / 24 ) ; 
-      $('#block_now')
-        .text(blno.block_no);
-      $('#hardfork_block')
-         .text(remain_block);
-      $('#hardfork_time')
-         .text(remain_time);
-    });
-
-    // Fills the list of active miners on this node.  I know, there are
-    // zillions of people out there on p2pool.  But I'm typically only
-    // interested to see, who is mining on my node.
-
-    $(document).on('update_miners', function(e, eventInfo) {
-      local_hashrate= 0; local_doa_hashrate= 0;
-      
-      $('#active_miners').empty();
-      
-      $.each(local_stats.miner_hash_rates, function(address, hashrate) {
-        address= address.replace(/[\W\s]+/g,"invalid_address_");
-        tr= $('<tr/>').attr('id', address);
-
-        // highlight our miner if configured
-        if(myself && myself.length > 0 && $.inArray(address, myself) >= 0) {
-          tr.addClass('warning');
-        }
-
-        link_icon= $('<i/>').attr('class', 'fa fa-external-link fa-fw');
-        blockinfo= $('<a/>')
-          .attr('href', currency_info.address_explorer_url_prefix + address)
-          .attr('target', '_blank').append(link_icon);
-
-        doa= local_stats.miner_dead_hash_rates[address] || 0;
-        doa_prop= (parseFloat(doa) / parseFloat(hashrate)) * 100;
+        <footer class="container">
+            <div class="panel panel-default clearfix">
+                <div class="panel-heading clearfix">
+                    <div class="col-sm-6">UI by <a href="https://github.com/justino/p2pool-ui-punchy">justino</a></div>
+                    <div class="col-sm-6">Please donate if you like this UI:</div>
+                </div>
+                <div class="panel-body">
+                    <div class="col-md-4"><i class="fa fa-btc"></i>: 195ufic8mfNrDqxgFCfmw5mQYwdu2im9G5</div>
+                    <div class="col-md-4">ETH: dee42d6b58e5d5d9f6f4c4783bea4fff34369c64</div>
+                    <div class="col-md-4">DASH: XerSXuygP6PeUoqVRyC2BFFHpUXXkFU8UP</div>
+                </div>
+            </div>
+        </footer>
         
-        local_hashrate+= hashrate;
-        local_doa_hashrate+= doa;
-
-        tr.append($('<td/>').attr('class', 'text-left')
-          .html(address + '&nbsp;').append(blockinfo));
-        tr.append($('<td/>').attr('class', 'text-right')
-          .append(formatHashrate(hashrate)));
-        tr.append($('<td/>').attr('class', 'text-right')
-          .append(formatHashrate(doa) + ' (' + doa_prop.toFixed(2) + '%)'));
-
-        diff= parseFloat(local_stats.miner_last_difficulties[address]) || 0;
-        time_to_share= (parseInt(local_stats.attempts_to_share) / parseInt(hashrate)
-         * (diff / parseFloat(global_stats.min_difficulty))) || 0;
-
-        tr.append($('<td/>').attr('class', 'text-right')
-          .append(diff.toFixed(3) +
-        ' (' + formatInt(diff*65536) + ')'));
-
-        tr.append($('<td/>').attr('class', 'text-right')
-          .append((''+time_to_share).formatSeconds()));
-
-        payout= current_payouts[address];
-
-        if(payout) {
-          td= $('<td/>').attr('class', 'text-right')
-            .text(parseFloat(payout).toFixed(8))
-            .append(' ').append(currency.clone());
-          tr.append(td);
-        }
-        else {
-          tr.append($('<td/>').attr('class', 'text-right')
-            .append($('<i/>').append('no shares yet')));
-        }
-        //$('#'+address).remove();
-        $('#active_miners').append(tr);
-      });
-
-      rate= formatHashrate(local_hashrate)
-        + ' (DOA '
-        + formatHashrate(local_doa_hashrate)
-        + ' / ' + ((local_doa_hashrate / local_hashrate) * 100).toFixed(2)
-        + '%)';
-      //dr="[debug: "+local_hashrate+" "+local_doa_hashrate+"]";        
-      $('#local_rate').text(rate);
-
-      global_doa_rate= global_stats.pool_hash_rate - global_stats.pool_nonstale_hash_rate;
-      global_rate= formatHashrate(global_stats.pool_hash_rate)
-        + ' (DOA '
-        + formatHashrate(global_doa_rate)
-        + ' / ' + ((global_doa_rate / global_stats.pool_hash_rate) * 100).toFixed(2)
-        + '%)';
-      $('#global_rate').text(global_rate);
-
-      $('#network_rate').text(formatHashrate(global_stats.network_hashrate));
-
-      block_diff=global_stats.network_block_difficulty
-      $('#block_difficulty').text(block_diff.toFixed(3) +
-        ' (' + formatInt(block_diff*65536) + ')');
-      
-
-      share_diff=parseFloat(global_stats.min_difficulty);
-      $('#share_difficulty').text(share_diff.toFixed(3) +
-        ' (' + formatInt(share_diff*65536) + ')');
-
-      $('#block_value')
-        .text(parseFloat(local_stats.block_value).toFixed(8))
-        .append(' ').append(currency.clone());
-
-      //$('#node_donation')
-      //  .text(local_stats.donation_proportion + '%');
-      
-      $('#node_fee')
-        .text(local_stats.fee + '%');
-      $('#p2pool_version')
-        .text(local_stats.version);
-      $('#protocol_version')
-        .text(local_stats.protocol_version);
-
-      $('#peers_in').text(local_stats.peers.incoming);
-      $('#peers_out').text(local_stats.peers.outgoing);
-
-      $('#node_uptime').text(('' + local_stats.uptime).formatSeconds());
-
-      $(document).attr('title', formatHashrate(local_hashrate)+ ' p2pool - '+currency_info.symbol+' - '+location.host);
-
-      if(local_stats.warnings.length > 0) {
-        $('#node_alerts').empty();
-
-        $.each(local_stats.warnings, function(key, warning) {
-          $('#node_alerts').append($('<p/>').append(warning));
-        });
-
-        $('#node_alerts').fadeIn(1000, function() {
-          $(this).removeClass('hidden');
-        });
-      }
-      else {
-        if(!$('#node_alerts').hasClass('hidden'))
-          $('#node_alerts').fadeOut(1000, function() {
-            $(this).addClass('hidden');
-          });
-      }
-
-      $('#shares')
-        .text('Total: ' + local_stats.shares.total
-        + ' (Orphan: ' + local_stats.shares.orphan
-        + ', Dead: ' + local_stats.shares.dead + ')');
-
-      time_to_share= parseInt(local_stats.attempts_to_share) / parseInt(local_hashrate);
-      $('#expected_time_to_share').text((''+time_to_share).formatSeconds());
-      time_to_block= parseInt(local_stats.attempts_to_block) / parseInt(global_stats.pool_hash_rate);
-      $('#expected_time_to_block').text((''+time_to_block).formatSeconds());
-
-      //$('#payout_now').html('&dash;');
-    });
-
-    // Fills the recent block table
-
-    $(document).on('update_blocks', function(e, eventInfo) {
-      $('#recent_blocks').empty();
-      $.each(recent_blocks, function(key, block) {
-        if(block.number < 393216 ) {
-            ts= block.ts; num= block.number ; hash= block.hash;
-        } else {
-            ts= block.ts; num= block.number - 393216; hash= block.hash;
-       }
-        // link to blockchain.info for the given hash
-        blockinfo= $('<a/>')
-          .attr('href', currency_info.block_explorer_url_prefix + hash)
-          .attr('target', '_blank').text(hash);
-
-        tr= $('<tr/>').attr('id', num);
-        tr.append($('<td/>').append($.format.prettyDate(new Date(ts * 1000))));
-        tr.append($('<td/>').append($.format.date(new Date(ts * 1000))));
-        tr.append($('<td/>').append(num));
-        tr.append($('<td/>').append(blockinfo));
-        //tr.append($('<td/>').html('&dash;'));
-        $('#recent_blocks').append(tr);
-      });
-    });
-
-    // Places the currency this node is mining in the page header.  If it's
-    // Bitcoin, use the fontawesome BTC icon.
-    
-    //doing some other init here
-
-    var set_currency_symbol= true;
-    $(document).on('update_currency', function(e, eventInfo) {
-      if(currency_info.symbol === 'BTC') {
-        // use fontawesome BTC symbol
-        currency= $('<i/>').attr('class', 'fa fa-btc fa-fw');
-      }
-      else { currency= $('<span/>').append(currency_info.symbol); }
-
-      if(set_currency_symbol) {
-        $('.currency')
-          .append(currency);
-        //$(document).attr('title','p2pool - '+currency_info.symbol+' - '+location.host);
+        <script src="https://code.jquery.com/jquery-2.0.3.min.js"></script>
+        <script src="js/jquery-dateFormat.min.js"></script>
+        <script src="https://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.20.1/moment.min.js"></script>
+        <script src="js/bootstrap-sortable.js"></script>>
         
-        $('.node')
-          .append(location.host);
-          
-        set_currency_symbol= false;
-      }
-    });
-
-    // Updates the 'Updated:' field in page header
-
-    $(document).on('update_time', function(e, eventInfo) {
-      dts= $.format.date(new Date(), 'yyyy-MM-dd HH:mm:ss');
-      $('#updated').text(dts);
-    });
-
-    // ==================================================================
-
-    var fetchdata= function() {
-      $.getJSON('/rate', function(data) {
-        if(data) rate= data;
-
-        $.getJSON('/web/currency_info', function(data) {
-          currency_info= data;
-          $(document).trigger('update_currency');
-
-          $.getJSON('/local_stats', function(data) {
-            if(data) local_stats= data;
-
-            $.getJSON('/current_payouts', function(data) {
-              if(data) current_payouts= data;
-
-              $.getJSON('/global_stats', function(data) {
-                if(data) global_stats= data;
-                $(document).trigger('update_miners');
-                $(document).trigger('update_time');
-              });
-            });
-          });
-        });
-      });
-    };
-
-    var fetchBlocks= function() {
-      $.getJSON('/web/currency_info', function(data) {
-        currency_info= data;
-        $.getJSON('/recent_blocks', function(data) {
-          if(data) recent_blocks= data;
-          $(document).trigger('update_blocks');
-        });
-      });
-    }
-
-    var fetchGraph= function(interval) {
-      //console.log(interval);
-      var graph_hashrate= [], graph_doa_hashrate= [];
-
-     if(!interval) interval= day; 
-
-      $.getJSON('/web/graph_data/local_hash_rate/last_' + interval, function(data) {
-        $.each(data, function(key, value) {
-          el= []; el.push(parseInt(value[0]) * 1000,
-            parseFloat(value[1]));
-          graph_hashrate.push(el);
-        });
-        graph_hashrate.sort();
-        $.getJSON('/web/graph_data/local_dead_hash_rate/last_' + interval, function(data) {
-          $.each(data, function(key, value) {
-            el= []; el.push(parseInt(value[0]) * 1000,
-              parseFloat(value[1]));
-            graph_doa_hashrate.push(el);
-          });
-          graph_doa_hashrate.sort();
-          draw(graph_hashrate, graph_doa_hashrate, interval);
-        })
-      })
-    }
-
-    // Let the GitHub ribbon fade out and be removed after 5 seconds.
-
-    //(setTimeout(function() {
-    //  $('#ribbon').fadeOut(1000, function() {
-    //    this.remove();
-    //  });
-    //}, intervalFigures * 1000);
-
-    setInterval(function() {
-      $(document).trigger('update');
-    }, intervalFigures * 1000);
-
-    </script>
-  </body>
+        <script src="js/highcharts.js"></script>
+        <script src="js/exporting.js"></script>
+        
+        <script src="js/util.js"></script>
+        <script src="js/charts.js"></script>
+        <script src="js/p2pool.js"></script>
+    </body>
 </html>
