@@ -42,7 +42,8 @@ sudo fallocate -l 4G /swapfile >>$now-p2pool.log
 sudo chmod 600 /swapfile >>$now-p2pool.log
 sudo mkswap /swapfile >>$now-p2pool.log
 sudo swapon /swapfile >>$now-p2pool.log
-sudo sed -i '$ a\/swapfile none swap sw 0 0' /etc/fstab  >>$now-p2pool.log
+sudo cp /etc/fstab /etc/fstab-$now.bak
+sudo echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 
 #For cgminer
 #sudo apt-get -y install libudev-dev >>$now-p2pool.log
